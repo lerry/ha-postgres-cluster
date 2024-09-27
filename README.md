@@ -4,12 +4,12 @@
 
 ## 目录
 
-1. [前提条件](#前提条件)
-2. [项目结构](#项目结构)
-3. [使用步骤](#使用步骤)
-4. [管理命令](#管理命令)
-5. [注意事项](#注意事项)
-6. [Dockerfile 说明](#dockerfile-说明)
+1. [版本信息](#版本信息)
+2. [前提条件](#前提条件)
+3. [项目结构](#项目结构)
+4. [使用步骤](#使用步骤)
+5. [管理命令](#管理命令)
+6. [注意事项](#注意事项)
 7. [故障排除](#故障排除)
 8. [可能存在的问题](#可能存在的问题)
 
@@ -33,6 +33,7 @@
 - `docker-compose.yml`: 定义 Patroni 和 HAProxy 服务
 - `patroni.yml`: Patroni 配置文件
 - `haproxy.cfg`: HAProxy 配置文件
+- `Dockerfile`: 自定义的基础镜像 Dockerfile，增加了 zhparser 插件，可以替换为官方镜像 `postgres:16`，增加了国内镜像加速，如果在国外服务器上构建，可以删除相关内容。
 
 ## 使用步骤
 
@@ -44,7 +45,7 @@
    cp .env.example .env
    ```
 
-   编辑 .env 文件,设置适当的值。
+   编辑 .env 文件,设置`HOSTNAME`，这一步非常重要，否则无法区分不同的 Patroni 节点。
 
 2. 修改 Makefile
 
@@ -102,24 +103,6 @@
 - 请妥善保管数据目录(`/data/pg16-ha/`)和配置文件。
 - 在生产环境中,建议使用更安全的方式管理密码,如使用环境变量或密钥管理系统。
 - 修改 Patroni 和 HAProxy 配置后,需要重启相应的服务以使更改生效。
-
-## Dockerfile 说明
-
-我们使用了一个自定义的基础镜像 `lerrybin/postgresql16-zhparser`，这个镜像包含了 PostgreSQL 16 和中文分词插件 zhparser。
-
-Dockerfile 的主要步骤如下：
-
-1. 更改 Debian 源为中国科技大学的镜像，以加快后续软件安装速度。
-
-2. 安装 Python3 和 pip，为后续安装 Patroni 做准备。
-
-3. 创建 Python 虚拟环境，并将其添加到 PATH 中。
-
-4. 使用阿里云的 PyPI 镜像安装 Patroni 及其依赖。
-
-5. 设置入口点为 Patroni，使用 `/etc/patroni.yml` 作为配置文件。
-
-这个 Dockerfile 的主要目的是在包含 PostgreSQL 和中文分词插件的基础上，添加 Patroni 支持，并通过使用国内镜像源来优化构建过程，提高在中国网络环境下的构建速度。
 
 ## 故障排除
 
