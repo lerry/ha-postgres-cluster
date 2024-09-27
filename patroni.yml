@@ -1,0 +1,65 @@
+scope: batman
+name: patroni
+
+restapi:
+  listen: 0.0.0.0:28008
+  connect_address: 127.0.0.1:28008
+  username: lerry
+  password: password
+
+etcd:
+  hosts:
+    - air.nload.top:2379
+    - mini.nload.top:2379
+    - mba.nload.top:2379
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      pg_hba:
+        - host replication replicator 127.0.0.1/32 md5
+        - host all all 0.0.0.0/0 md5
+        - host replication lerry 0.0.0.0/0 md5
+      parameters:
+        max_connections: 100
+        shared_buffers: 128MB
+        wal_level: replica
+        hot_standby: "on"
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_keep_size: 1GB # 替换 wal_keep_segments
+        synchronous_commit: "off"
+        wal_writer_delay: 200ms
+
+  initdb: # Note: It needs to be a list (some options need values, others are switches)
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5430
+  connect_address: 127.0.0.1:5430
+  data_dir: /var/lib/postgresql/data
+  pgpass: /tmp/pgpass
+  authentication:
+    replication:
+      username: lerry
+      password: password
+    superuser:
+      username: lerry
+      password: password
+    rewind:
+      username: lerry
+      password: password
+  parameters:
+    unix_socket_directories: "."
+
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

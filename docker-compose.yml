@@ -1,0 +1,40 @@
+services:
+  patroni:
+    build: .
+    container_name: patroni-ha
+    environment:
+      - PATRONI_SCOPE=batman
+      - PATRONI_NAME=patroni-${HOSTNAME}
+      - PATRONI_ETCD_HOSTS=air.nload.top:2379,mini.nload.top:2379,mba.nload.top:2379
+      - PATRONI_RESTAPI_USERNAME=lerry
+      - PATRONI_RESTAPI_PASSWORD=password
+      - PATRONI_RESTAPI_CONNECT_ADDRESS=${HOSTNAME}.nload.top:28008
+      - PATRONI_SUPERUSER_USERNAME=lerry
+      - PATRONI_SUPERUSER_PASSWORD=password
+      - PATRONI_REPLICATION_USERNAME=lerry
+      - PATRONI_REPLICATION_PASSWORD=password
+      - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5430
+      - PATRONI_POSTGRESQL_CONNECT_ADDRESS=${HOSTNAME}.nload.top:5430
+      - PATRONI_POSTGRESQL_DATA_DIR=/var/lib/postgresql/data/node0
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./patroni.yml:/etc/patroni.yml:ro
+      - /data/pg16-ha/:/var/lib/postgresql/data
+    user: postgres:postgres
+    network_mode: host
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    restart: always
+
+  haproxy:
+    container_name: haproxy-pg-ha
+    image: docker.nload.top/library/haproxy:lts
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    network_mode: host
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    restart: always
+
+volumes:
+  postgres-data:
